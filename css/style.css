@@ -6,6 +6,7 @@
     --color-light: hsl(80, 10%, 80%);
     --color-dark: hsl(360, 10%, 10%);
     --color-dark-transparent: hsla(360, 10%, 10%, 0.2);
+    --color-light-transparent: hsla(80, 10%, 80%, 0.2);
 
     --step--1: clamp(0.94rem, calc(0.94rem + 0vw), 0.94rem);
     --step-0: clamp(1.13rem, calc(1.08rem + 0.22vw), 1.25rem);
@@ -23,7 +24,9 @@
 }
 
 body {
-    background-color: var(--color-light);
+    background: url(../img/flagOfUSA\ -\ pexels.jpeg);
+    background-size: contain;
+    background-repeat: no-repeat;
     color: var(--color-dark);
     font-family: sans-serif;
     font-size: var(--step-0);
@@ -42,8 +45,13 @@ audio {
 }
 
 .container {
-    width: min(80ch, 100vw - var(--space-l-xl));
+    width: min(80ch, 40vw);
+    height: min(100vh);
     margin-inline: auto;
+    padding-left: .5vw;
+    float: right;
+    /* background: url('../img/sealOfMississippi\ -\ creazilla.png') */
+    background-color: navy;
 }
 
 .footer {
@@ -57,43 +65,6 @@ audio {
 }
 .footer > * {
     font-size: var(--step--1);
-}
-.hero {
-    display: grid;
-    grid-template-areas: 'stack';
-}
-
-.hero-gradient {
-    grid-area: stack;
-    place-self: end;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        0deg,
-        var(--color-dark),
-        var(--color-dark-transparent)
-    );
-}
-
-.hero > picture {
-    place-self: center;
-    grid-area: stack;
-    width: 100%;
-    height: 100%;
-}
-
-.hero img {
-    width: 100%;
-    height: 40vh;
-    aspect-ratio: 16/9;
-    object-fit: cover;
-}
-
-.hero-content {
-    grid-area: stack;
-    place-self: end;
-    padding: var(--space-m-l) 0;
-    color: var(--color-light);
 }
 
 @media (max-width: 30rem) {
@@ -138,27 +109,27 @@ audio {
 
 /* för spelelementet används #id som selektor för att skapa css reglerna */
 #game-button {
-    width: var(--space-4xl-5xl);
-    height: var(--space-4xl-5xl);
+    width: 30vw;
+    height: 99vh;
     font-size: var(--step-2);
-    background: url('../img/brett-meliti-RgkYMfFopIA-unsplash-removebg-preview.png');
+    background: url('../img/mapOfMississippiRibbon\ -\ wikimediaCommons.png');
     background-size: cover;
+    background-repeat: no-repeat;
     background-position: center;
-    border: 2px solid transparent;
-    color: var(--color-light);
-    text-transform: uppercase;
-    font-weight: 700;
+    border: none;
+    margin-left: 12vw;
+    margin-top: 0.3rem;
     cursor: pointer;
 }
 
 #game-button:hover {
-    border-color: var(--color-dark-transparent);
+    transform: scale(1.02);
 }
 
 #game-button:active {
-    border-color: var(--color-dark);
-    background-color: var(--color-dark-transparent);
+    transform: scale(0.98);
 }
+
 
 /* #msgbox är elementet som visar sidans toasts, popupmeddelanden
 * fixed fungerar liknande absolute för att positionera element på ett fast ställe
