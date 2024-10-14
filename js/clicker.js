@@ -163,25 +163,33 @@ window.addEventListener('load', (event) => {
  */
 upgrades = [
     {
-        name: 'Sop',
+        name: 'Tax Legislation',
         cost: 10,
         amount: 1,
+        requiredClicks: 20,
     },
     {
-        name: 'Kvalitetsspade',
-        cost: 50,
+        name: 'Local Roads',
+        cost: 10,
         clicks: 2,
     },
     {
-        name: 'Skottkärra',
+        name: 'Increased Tax',
         cost: 100,
         amount: 10,
     },
     {
-        name: 'Grävmaskin',
+        name: 'Public Transports',
         cost: 1000,
         amount: 100,
+        requiredUpgrade: 'Local Roads',
+        requiredAmount: 10,
     },
+    {
+        name: 'Better Housing',
+        cost: 10000,
+        amount: 1000,
+    }
 ];
 
 /* createCard är en funktion som tar ett upgrade objekt som parameter och skapar
@@ -209,11 +217,11 @@ function createCard(upgrade) {
     header.classList.add('title');
     const cost = document.createElement('p');
     if (upgrade.amount) {
-        header.textContent = `${upgrade.name}, +${upgrade.amount} per sekund.`;
+        header.textContent = `${upgrade.name}, +${upgrade.amount} per second.`;
     } else {
-        header.textContent = `${upgrade.name}, +${upgrade.clicks} per klick.`;
+        header.textContent = `${upgrade.name}, +${upgrade.clicks} per click.`;
     }
-    cost.textContent = `Köp för ${upgrade.cost} benbitar.`;
+    cost.textContent = `Buy for ${upgrade.cost}$.`;
 
     card.addEventListener('click', (e) => {
         if (money >= upgrade.cost) {
@@ -223,6 +231,12 @@ function createCard(upgrade) {
             cost.textContent = 'Köp för ' + upgrade.cost + ' benbitar';
             moneyPerSecond += upgrade.amount ? upgrade.amount : 0;
             moneyPerClick += upgrade.clicks ? upgrade.clicks : 0;
+            if (upgrade.requiredUpgrade) {
+                const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
+                if (!requiredUpgrade || requiredUpgrade.amount < upgrade.requiredAmount) {
+                    message('Du måste ha ${upgrade.requiredAmount} av ${upgrade.requiredUpgrade} först.'),
+                }
+            }
             message('Grattis du har köpt en uppgradering!', 'success');
         } else {
             message('Du har inte råd.', 'warning');
