@@ -37,25 +37,30 @@ let active = false; // exempel för att visa att du kan lägga till klass för a
 
 let achievements = [
     {
-        description: 'Museet är redo att öppna, grattis! ',
+        description: 'Your state is coming along well',
         requiredUpgrades: 1,
         acquired: false,
     },
     {
-        description: 'Nu börjar det likna något, fortsätt gräva!',
+        description: 'Your first civilians start to live here now',
         requiredUpgrades: 10,
         acquired: false,
     },
     {
-        description: 'Klickare, med licens att klicka!',
+        description: 'A new hand touches the beacon',
         requiredClicks: 10,
         acquired: false,
     },
     {
-        description: 'Tac-2 god!',
+        description: 'Autoclicker?',
         requiredClicks: 10000,
         acquired: false,
     },
+    {
+        description: 'OK. Now I know you are cheating with autoclicker. Banned',
+        requiredClicks: 10000000000,
+        acquired: false
+    }
 ];
 
 /* Med ett valt element, som knappen i detta fall så kan vi skapa listeners
@@ -167,28 +172,68 @@ upgrades = [
         cost: 10,
         amount: 1,
         requiredClicks: 20,
-    },
-    {
-        name: 'Local Roads',
-        cost: 10,
-        clicks: 2,
+        owned: 0,
     },
     {
         name: 'Increased Tax',
         cost: 100,
         amount: 10,
+        requiredUpgrade: 'Tax Legislation',
+        requiredAmount: 25,
+        owned: 0,
+    },
+    {
+        name: 'Local Roads',
+        cost: 10,
+        clicks: 1,
+        owned: 0,
+    },
+    {
+        name: 'Major Roads',
+        cost: 100,
+        clicks: 4,
+        requiredUpgrade: 'Local Roads',
+        requiredAmount: 15,
+        owned: 0,
     },
     {
         name: 'Public Transports',
-        cost: 1000,
-        amount: 100,
+        cost: 250,
+        amount: 15,
         requiredUpgrade: 'Local Roads',
-        requiredAmount: 10,
+        requiredAmount: 20,
+        owned: 0,
     },
     {
-        name: 'Better Housing',
-        cost: 10000,
-        amount: 1000,
+        name: 'Plots',
+        cost: 750,
+        amount: 50,
+        requiredAchievement: 'Your first civilians start to live here now',
+        owned: 0,
+    },
+    {
+        name: 'Buildings',
+        cost: 2000,
+        amount: 100,
+        requiredUpgrade: 'Plots',
+        requiredAmount: 10,
+        owned: 0,
+    },
+    {
+        name: 'Apartment Buildings',
+        cost: 5000,
+        amount: 300,
+        requiredUpgrade: 'Buildings',
+        requiredAmount: 15,
+        owned: 0,
+    },
+    {
+        name: 'The Bank',
+        cost: 5000,
+        effect: 'doubleMoney',
+        requiredUpgrade: 'Buildings',
+        requiredAmount: 15,
+        owned: 0,
     }
 ];
 
@@ -216,35 +261,62 @@ function createCard(upgrade) {
     const header = document.createElement('p');
     header.classList.add('title');
     const cost = document.createElement('p');
+    const ownedDisplay = document.createElement('p');
     if (upgrade.amount) {
         header.textContent = `${upgrade.name}, +${upgrade.amount} per second.`;
-    } else {
+    } else if (upgrade.clicks) {
         header.textContent = `${upgrade.name}, +${upgrade.clicks} per click.`;
+    } else {
+        header.textContent = `${upgrade.name}, double your money`
     }
-    cost.textContent = `Buy for ${upgrade.cost}$.`;
+    cost.textContent = `Purchase for: ${upgrade.cost}$.`;
+    ownedDisplay.textContent = `Owns: ${upgrade.owned}`;
 
     card.addEventListener('click', (e) => {
         if (money >= upgrade.cost) {
-            acquiredUpgrades++;
-            money -= upgrade.cost;
-            upgrade.cost *= 1.5;
-            cost.textContent = 'Köp för ' + upgrade.cost + ' benbitar';
-            moneyPerSecond += upgrade.amount ? upgrade.amount : 0;
-            moneyPerClick += upgrade.clicks ? upgrade.clicks : 0;
             if (upgrade.requiredUpgrade) {
                 const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
                 if (!requiredUpgrade || requiredUpgrade.amount < upgrade.requiredAmount) {
-                    message('Du måste ha ${upgrade.requiredAmount} av ${upgrade.requiredUpgrade} först.'),
+                    message(`You need to have ${upgrade.requiredAmount} av ${upgrade.requiredUpgrade} firstly.`, 'warning');
+                    return;
                 }
             }
-            message('Grattis du har köpt en uppgradering!', 'success');
+            if (upgrade.requiredAchievement) {
+                const requiredAchievement = achievements.find(a => a.name === upgrade.requiredAchievement);
+                if (!requiredAchievement || !requiredAchievement.acquired) {
+                    message(`You have to unlock: ${upgrade.requiredAchievement}.`, 'warning');
+                    return;
+                }
+            }
+            if (upgrade.effect === 'doubleMoney') {
+                money *= 2;
+                message ('The Bank doubled your money', 'success');
+            } else {
+            
+                acquiredUpgrades++;
+                money -=upgrade.cost;
+                upgrade.cost = Math.round(upgrade.cost * 1.5);
+                cost.textContent = 'Purchase for ' + upgrade.cost + '$';
+                
+                if (upgrade.clicks) {
+                    moneyPerClick += upgrade.clicks;
+                } else if (upgrade.amount) {
+                    moneyPerSecond += upgrade.amount;
+                }
+            }
+            
+            upgrade.owned++;
+            ownedDisplay.textContent = `Owns: ${upgrade.owned}`;
+
+            message('Congratulations, you have purchased a upgrade!', 'success');
         } else {
-            message('Du har inte råd.', 'warning');
+            message('Too poor.', 'warning');
         }
     });
 
     card.appendChild(header);
     card.appendChild(cost);
+    card.appendChild(ownedDisplay)
     return card;
 }
 
