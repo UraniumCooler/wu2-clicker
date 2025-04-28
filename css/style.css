@@ -63,7 +63,7 @@ audio {
 
  .nav-mobile {
     position: absolute;
-    background: #222831;
+    background: #223125;
     color: #fff;
     z-index: 1;
     padding-left: 0.4rem;
@@ -77,13 +77,27 @@ audio {
     display: block;
 }
 
-.container {
-    width: min(80ch, 40vw);
+.upgcontainer {
+    width: min(80ch, 30vw);
     height: min(100vh);
     margin-inline: auto;
     padding-left: .5vw;
     float: right;
     background: url('../img/sealOfMississippi\ -\ creazilla.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position-y: 3.5rem;
+    background-color: #222831;
+    color:rgb(255, 255, 255);
+    overflow: auto;
+}
+
+.infocontainer {
+    width: min(80ch, 20vw);
+    height: min(100vh);
+    margin-inline: auto;
+    padding-left: .5vw;
+    float: left;
     background-repeat: no-repeat;
     background-size: contain;
     background-position-y: 3.5rem;
@@ -175,14 +189,15 @@ audio {
 */
 #msgbox {
     position: fixed;
-    right: 2vmin;
+    left: 2vmin;
     bottom: 2vmin;
-    min-width: 16rem;
+    max-width: 18vw;
 }
 
 #msgbox > p {
     margin-bottom: var(--space-xs-s);
     padding: var(--space-xs-s);
+    font-size: 1.5ch;
 }
 
 /* de här klasserna används för att bestämma stilen på de olika storternas
@@ -201,6 +216,11 @@ audio {
     background-color: rebeccapurple;
 }
 
+.unavailable {
+    opacity: 0;
+    pointer-events: none;
+}
+
 /* dessa kort används för spelets uppgraderingar 
  * lägg märke till padding och margin för att ge elementen lite luft och 
  * skapa en mer lättläst struktur
@@ -214,6 +234,7 @@ audio {
     padding: var(--space-s-m) var(--space-xs-s);
     background-color: #222831;
     background-color: rgba(34, 40, 49, 0.6);
+    font-size: 1.5ch;
 }
 
 .card:hover {

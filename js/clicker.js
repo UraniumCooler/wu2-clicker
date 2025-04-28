@@ -43,7 +43,7 @@ let achievements = [
     },
     {
         description: 'Your first civilians start to live here now',
-        requiredUpgrades: 10,
+        requiredUpgrades: 25,
         acquired: false,
     },
     {
@@ -152,12 +152,6 @@ function step(timestamp) {
  * https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
  * Efter det så kallas requestAnimationFrame och spelet är igång.
  */
-window.addEventListener('load', (event) => {
-    upgrades.forEach((upgrade) => {
-        upgradeList.appendChild(createCard(upgrade));
-    });
-    window.requestAnimationFrame(step);
-});
 
 /* En array med upgrades. Varje upgrade är ett objekt med egenskaperna name, cost
  * och amount. Önskar du ytterligare text eller en bild så går det utmärkt att
@@ -179,7 +173,7 @@ upgrades = [
         cost: 100,
         amount: 10,
         requiredUpgrade: 'Tax Legislation',
-        requiredAmount: 25,
+        requiredAmount: 10,
         owned: 0,
     },
     {
@@ -255,6 +249,30 @@ upgrades = [
  * https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
  */
+function renderUpgrades() {
+    upgradeList.innerHTML = '';
+
+    upgrades.forEach((upgrade) => {
+        let isAvailable = true;
+
+        if (upgrade.requiredUpgrade) {
+            const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
+            if (!requiredUpgrade || requiredUpgrade.owned < upgrade.requiredAmount) {
+                isAvailable = false;
+            }
+        }
+        if (upgrade.requiredAchievement) {
+            const requiredAchievement = achievements.find(a => a.description === upgrade.requiredAchievement);
+            if (!requiredAchievement || requiredAchievement.owned < upgrade.requiredAmount) {
+                isAvailable = false;
+            }
+        }
+        if (isAvailable || upgrade.owned > 0) {
+            upgradeList.appendChild(createCard(upgrade));
+        }
+    })
+}
+
 function createCard(upgrade) {
     const card = document.createElement('div');
     card.classList.add('card');
@@ -270,47 +288,50 @@ function createCard(upgrade) {
         header.textContent = `${upgrade.name}, double your money`
     }
     cost.textContent = `Purchase for: ${upgrade.cost}$.`;
-    ownedDisplay.textContent = `Owns: ${upgrade.owned}`;
+    ownedDisplay.textContent = `You own: ${upgrade.owned}`;
 
     card.addEventListener('click', (e) => {
-        if (money >= upgrade.cost) {
-            if (upgrade.requiredUpgrade) {
-                const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
-                if (!requiredUpgrade || requiredUpgrade.amount < upgrade.requiredAmount) {
-                    message(`You need to have ${upgrade.requiredAmount} av ${upgrade.requiredUpgrade} firstly.`, 'warning');
-                    return;
+        if (isAvailable) { 
+            if (money >= upgrade.cost) {
+                if (upgrade.requiredUpgrade) {
+                    const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
+                    console.log(`Checking ${upgrade.requiredUpgrade}: owned = ${requiredUpgrade.owned}, required = ${upgrade.requiredAmount}`);
+                    if (!requiredUpgrade || requiredUpgrade.owned < upgrade.requiredAmount) {
+                        message(`You need to have ${upgrade.requiredAmount} of ${upgrade.requiredUpgrade} firstly.`, 'warning');
+                        return;
+                    }
                 }
-            }
-            if (upgrade.requiredAchievement) {
-                const requiredAchievement = achievements.find(a => a.name === upgrade.requiredAchievement);
-                if (!requiredAchievement || !requiredAchievement.acquired) {
-                    message(`You have to unlock: ${upgrade.requiredAchievement}.`, 'warning');
-                    return;
+                if (upgrade.requiredAchievement) {
+                    const requiredAchievement = achievements.find(a => a.name === upgrade.requiredAchievement);
+                    if (!requiredAchievement || !requiredAchievement.acquired) {
+                        message(`You have to unlock: ${upgrade.requiredAchievement}.`, 'warning');
+                        return;
+                    }
                 }
-            }
-            if (upgrade.effect === 'doubleMoney') {
-                money *= 2;
-                message ('The Bank doubled your money', 'success');
-            } else {
-            
-                acquiredUpgrades++;
-                money -=upgrade.cost;
-                upgrade.cost = Math.round(upgrade.cost * 1.5);
-                cost.textContent = 'Purchase for ' + upgrade.cost + '$';
+                if (upgrade.effect === 'doubleMoney') {
+                    money *= 2;
+                    message ('The Bank doubled your money', 'success');
+                } else {
                 
-                if (upgrade.clicks) {
-                    moneyPerClick += upgrade.clicks;
-                } else if (upgrade.amount) {
-                    moneyPerSecond += upgrade.amount;
+                    acquiredUpgrades++;
+                    money -=upgrade.cost;
+                    upgrade.cost = Math.round(upgrade.cost * 1.3);
+                    cost.textContent = 'Purchase for ' + upgrade.cost + '$';
+                    
+                    if (upgrade.clicks) {
+                        moneyPerClick += upgrade.clicks;
+                    } else if (upgrade.amount) {
+                        moneyPerSecond += upgrade.amount;
+                    }
                 }
-            }
-            
-            upgrade.owned++;
-            ownedDisplay.textContent = `Owns: ${upgrade.owned}`;
+                
+                upgrade.owned++;
+                ownedDisplay.textContent = `Owns: ${upgrade.owned}`;
 
-            message('Congratulations, you have purchased a upgrade!', 'success');
-        } else {
-            message('Too poor.', 'warning');
+                message('Congratulations, you have purchased a upgrade!', 'success');
+            } else {
+                message('Too poor.', 'warning');
+            }
         }
     });
 
@@ -320,6 +341,13 @@ function createCard(upgrade) {
     return card;
 }
 
+window.addEventListener('load', (event) => {
+    renderUpgrades();
+    upgrades.forEach((upgrade) => {
+        upgradeList.appendChild(createCard(upgrade));
+    });
+    window.requestAnimationFrame(step);
+});
 /* Message visar hur vi kan skapa ett html element och ta bort det.
  * appendChild används för att lägga till och removeChild för att ta bort.
  * Detta görs med en timer.

@@ -14,20 +14,33 @@
     <audio id="swoosh" src="audio/607251__d4xx__swoosh-2.wav"></audio>
     </header>
     
-    <main class="container">
+    <main class="upgcontainer">
+        <article class="game">
+            <div class="w-100">
+                <h2>Upgrades</h2>
+                <div id="upgradelist"></div>
+            </div>
+        </article>
+    </main>
+    <main class="infocontainer">
         <article class="game">
             <div class="game-hud">
                 <ul class="game-currency">
                     <li class="item">
                         <h3><span id="money"></span>Money</h3>
+                        <li class="item">
+                            <h3><span id="mpc"></span>Money per click</h3>
+                        </li>
+                        <li class="item">
+                            <h3><span id="mps"></span>Money per second</h3>
+                        </li>
+                        <li class="item">
+                            <h3><span id="upgrades"></span>Upgrades</h3>
+                        </li>
                     </li>
                 </ul>
             </div>
-            <div class="w-100">
-                <h2>Uppgraderingar</h2>
-                <div id="upgradelist"></div>
-            </div>
-        </article>
+        </article> 
     </main>
     <nav>
         <input type="checkbox" id="check">
@@ -35,21 +48,6 @@
           <i class="fas fa-bars"></i>
         </label>
         <div class="nav-mobile">
-                <article class="game">
-                    <div class="game-hud">
-                        <ul class="game-currency">
-                            <li class="item">
-                                <h3><span id="mpc"></span>Money per click</h3>
-                            </li>
-                            <li class="item">
-                                <h3><span id="mps"></span>Tax</h3>
-                            </li>
-                            <li class="item">
-                                <h3><span id="upgrades"></span>Upgrades</h3>
-                            </li>
-                        </ul>
-                    </div>
-                </article>
                 <div>
                     <p>Hjälp till att fixa fel och lägga till funktioner:</p>
                     <ul>
