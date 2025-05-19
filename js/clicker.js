@@ -149,19 +149,19 @@ const states = [
     "Oklahoma", "Oregon", "Pennsylvania", "Rhode_Island", "South_Carolina", "South_Dakota",
     "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West_Virginia",
     "Wisconsin", "Wyoming"
-  ];
+];
   
 window.addEventListener('DOMContentLoaded', () => {
     const randomIndex = Math.floor(Math.random() * states.length);
     const selectedState = states[randomIndex];
 
-    const sealImagePath = `../img/Seal_of_${selectedState}.png`;
+    const sealImagePath = `./img/Seal_of_${selectedState}.png`;
     const container = document.querySelector('.upgcontainer');
     if (container) {
         container.style.backgroundImage = `url('${sealImagePath}')`;
     }
 
-    const mapImagePath = `../img/Map_of_${selectedState}.png`;
+    const mapImagePath = `./img/Map_of_${selectedState}.png`;
     const gameButton = document.getElementById('game-button');
     if (gameButton) {
         gameButton.style.backgroundImage = `url('${mapImagePath}')`;
