@@ -14,7 +14,6 @@ const mpcTracker = document.querySelector('#mpc'); // money per click
 const upgradesTracker = document.querySelector('#upgrades');
 const upgradeList = document.querySelector('#upgradelist');
 const msgbox = document.querySelector('#msgbox');
-const audioAchievement = document.querySelector('#swoosh');
 
 /* Följande variabler använder vi för att hålla reda på hur mycket pengar som
  * spelaren, har och tjänar.
@@ -35,6 +34,44 @@ let active = false; // exempel för att visa att du kan lägga till klass för a
 // av achievements.
 // requiredSOMETHING är vad som krävs för att få dem
 
+function saveGameState() {
+    const gameState = {
+        money,
+        moneyPerClick,
+        moneyPerSecond,
+        acquiredUpgrades,
+        achievements: achievements.map(a => a.acquired),
+        upgrades: upgrades.map(u => u.owned),
+        selectedState
+    };
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+}
+
+function loadGameState() {
+    const savedState = localStorage.getItem('gameState');
+    if (savedState) {
+        const gameState = JSON.parse(savedState);
+        money = gameState.money || 0;
+        moneyPerClick = gameState.moneyPerClick || 1;
+        moneyPerSecond = gameState.moneyPerSecond || 0;
+        acquiredUpgrades = gameState.acquiredUpgrades || 0;
+
+        achievements.forEach((achievement, index) => {
+            achievement.acquired = gameState.achievements[index] || false;
+        });
+
+        upgrades.forEach((upgrade, index) => {
+            upgrade.owned = gameState.upgrades[index] || 0;
+            
+            for (let i = 0; i < upgrade.owned; i++) {
+                upgrade.cost = Math.round(upgrade.cost * 1.3);
+            }
+        });
+
+        selectedState = gameState.selectedState || '';
+    }
+}
+
 let achievements = [
     {
         description: 'Your state is coming along well',
@@ -43,7 +80,7 @@ let achievements = [
     },
     {
         description: 'Your first civilians start to live here now',
-        requiredUpgrades: 25,
+        requiredUpgrades: 40,
         acquired: false,
     },
     {
@@ -51,16 +88,6 @@ let achievements = [
         requiredClicks: 10,
         acquired: false,
     },
-    {
-        description: 'Autoclicker?',
-        requiredClicks: 10000,
-        acquired: false,
-    },
-    {
-        description: 'OK. Now I know you are cheating with autoclicker. Banned',
-        requiredClicks: 10000000000,
-        acquired: false
-    }
 ];
 
 /* Med ett valt element, som knappen i detta fall så kan vi skapa listeners
@@ -81,6 +108,7 @@ clickerButton.addEventListener(
         // håll koll på hur många gånger spelaren klickat
         numberOfClicks += 1;
         // console.log(clicker.score);
+        saveGameState();
     },
     false
 );
@@ -191,79 +219,96 @@ upgrades = [
     {
         name: 'Tax Legislation',
         cost: 10,
-        amount: 1,
+        amount: 0.5,
         requiredClicks: 20,
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.1)
     },
     {
         name: 'Increased Tax',
         cost: 100,
-        amount: 10,
+        amount: 5,
         requiredUpgrade: 'Tax Legislation',
         requiredAmount: 10,
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.3)
     },
     {
         name: 'Local Roads',
         cost: 10,
-        clicks: 1,
+        clicks: 0.5,
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.1)
     },
     {
         name: 'Major Roads',
         cost: 100,
-        clicks: 4,
-        requiredUpgrade: 'Local Roads',
-        requiredAmount: 15,
+        clicks: 2,
+        requiredUpgrade: [
+            { name: 'Local Roads', amount: 15},
+            { name: 'Tax Legislation', amount: 5},
+        ],
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.3)
     },
     {
         name: 'Public Transports',
         cost: 250,
-        amount: 15,
-        requiredUpgrade: 'Local Roads',
+        amount: 7,
+        requiredUpgrade: [
+            { name: 'Local Roads', amount: 20},
+            { name: 'Major Roads', amount: 5},
+        ],
         requiredAmount: 20,
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.2)
     },
     {
         name: 'Plots',
         cost: 750,
-        amount: 50,
+        amount: 25,
         requiredAchievement: 'Your first civilians start to live here now',
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.1)
     },
     {
         name: 'Buildings',
         cost: 2000,
-        amount: 100,
+        amount: 50,
         requiredUpgrade: 'Plots',
         requiredAmount: 10,
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.5)
     },
     {
         name: 'Apartment Buildings',
         cost: 5000,
-        amount: 300,
+        amount: 120,
         requiredUpgrade: 'Buildings',
-        requiredAmount: 15,
+        requiredAmount: 10,
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 1.7)
     },
     {
         name: 'The Bank',
         cost: 5000,
         effect: 'doubleMoney',
-        requiredUpgrade: 'Buildings',
-        requiredAmount: 15,
+        requiredUpgrade: [
+            { name: 'Buildings', amount: 20},
+            { name: 'Increased Tax', amount: 20},
+            { name: 'Tax Legislation', amount: 50}
+        ],
         owned: 0,
         displayed: false,
+        costChange: (currentCost) => Math.round(currentCost * 2.4)
     }
 ];
 
@@ -287,9 +332,15 @@ upgrades = [
  */
 function renderUpgrades() {
     upgrades.forEach((upgrade) => {
-        const hasPrerequisites = 
-        (!upgrade.requiredUpgrade || (upgrades.find(u => u.name === upgrade.requiredUpgrade)?.owned || 0 ) >= (upgrade.requiredAmount || 0)) &&
-        (!upgrade.requiredAchievement || achievements.find(a => a.description === upgrade.requiredAchievement)?.acquired);
+        const hasRequiredUpgrades = Array.isArray(upgrade.requiredUpgrade)
+            ? upgrade.requiredUpgrade.every(req => {
+                const requiredUpgrade = upgrades.find(u => u.name === req.name);
+                return requiredUpgrade && requiredUpgrade.owned >= req.amount;
+            })
+            : (!upgrade.requiredUpgrade || (upgrades.find(u => u.name === upgrade.requiredUpgrade)?.owned || 0) >= (upgrade.requiredAmount || 0));
+        const hasRequiredAchievement = (!upgrade.requiredAchievement || achievements.find(a => a.description === upgrade.requiredAchievement)?.acquired);
+
+        const hasPrerequisites = hasRequiredUpgrades && hasRequiredAchievement;
 
         if (hasPrerequisites && !upgrade.displayed) {
             upgradeList.appendChild(createCard(upgrade));
@@ -348,7 +399,7 @@ function createCard(upgrade) {
                 
                     acquiredUpgrades++;
                     money -=upgrade.cost;
-                    upgrade.cost = Math.round(upgrade.cost * 1.3);
+                    upgrade.cost = upgrade.costChange(upgrade.cost);
                     cost.textContent = 'Purchase for ' + upgrade.cost + '$';
                     
                     if (upgrade.clicks) {
@@ -360,6 +411,7 @@ function createCard(upgrade) {
                 
                 upgrade.owned++;
                 ownedDisplay.textContent = `Owns: ${upgrade.owned}`;
+                saveGameState();
 
                 message('Congratulations, you have purchased a upgrade!', 'success');
             } else {
