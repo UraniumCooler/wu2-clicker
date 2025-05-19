@@ -116,30 +116,57 @@ function step(timestamp) {
     // villkoren i första ifsatsen ser till att achivments som är klarade
     // tas bort. Efter det så kontrolleras om spelaren har uppfyllt kriterierna
     // för att få den achievement som berörs.
-    achievements = achievements.filter((achievement) => {
-        if (achievement.acquired) {
-            return false;
-        }
+    achievements.forEach((achievement) => {
+        if (achievement.acquired) return;
+    
         if (
             achievement.requiredUpgrades &&
             acquiredUpgrades >= achievement.requiredUpgrades
         ) {
             achievement.acquired = true;
             message(achievement.description, 'achievement');
-            return false;
         } else if (
             achievement.requiredClicks &&
             numberOfClicks >= achievement.requiredClicks
         ) {
             achievement.acquired = true;
             message(achievement.description, 'achievement');
-            return false;
         }
-        return true;
     });
+    
+
+    renderUpgrades();
 
     window.requestAnimationFrame(step);
 }
+
+const states = [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New_Hampshire",
+    "New_Jersey", "New_Mexico", "New_York", "North_Carolina", "North_Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode_Island", "South_Carolina", "South_Dakota",
+    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West_Virginia",
+    "Wisconsin", "Wyoming"
+  ];
+  
+window.addEventListener('DOMContentLoaded', () => {
+    const randomIndex = Math.floor(Math.random() * states.length);
+    const selectedState = states[randomIndex];
+
+    const sealImagePath = `../img/Seal_of_${selectedState}.png`;
+    const container = document.querySelector('.upgcontainer');
+    if (container) {
+        container.style.backgroundImage = `url('${sealImagePath}')`;
+    }
+
+    const mapImagePath = `../img/Map_of_${selectedState}.png`;
+    const gameButton = document.getElementById('game-button');
+    if (gameButton) {
+        gameButton.style.backgroundImage = `url('${mapImagePath}')`;
+    }
+})
 
 /* Här använder vi en listener igen. Den här gången så lyssnar iv efter window
  * objeket och när det har laddat färdigt webbsidan(omvandlat html till dom)
@@ -167,6 +194,7 @@ upgrades = [
         amount: 1,
         requiredClicks: 20,
         owned: 0,
+        displayed: false,
     },
     {
         name: 'Increased Tax',
@@ -175,12 +203,14 @@ upgrades = [
         requiredUpgrade: 'Tax Legislation',
         requiredAmount: 10,
         owned: 0,
+        displayed: false,
     },
     {
         name: 'Local Roads',
         cost: 10,
         clicks: 1,
         owned: 0,
+        displayed: false,
     },
     {
         name: 'Major Roads',
@@ -189,6 +219,7 @@ upgrades = [
         requiredUpgrade: 'Local Roads',
         requiredAmount: 15,
         owned: 0,
+        displayed: false,
     },
     {
         name: 'Public Transports',
@@ -197,6 +228,7 @@ upgrades = [
         requiredUpgrade: 'Local Roads',
         requiredAmount: 20,
         owned: 0,
+        displayed: false,
     },
     {
         name: 'Plots',
@@ -204,6 +236,7 @@ upgrades = [
         amount: 50,
         requiredAchievement: 'Your first civilians start to live here now',
         owned: 0,
+        displayed: false,
     },
     {
         name: 'Buildings',
@@ -212,6 +245,7 @@ upgrades = [
         requiredUpgrade: 'Plots',
         requiredAmount: 10,
         owned: 0,
+        displayed: false,
     },
     {
         name: 'Apartment Buildings',
@@ -220,6 +254,7 @@ upgrades = [
         requiredUpgrade: 'Buildings',
         requiredAmount: 15,
         owned: 0,
+        displayed: false,
     },
     {
         name: 'The Bank',
@@ -228,6 +263,7 @@ upgrades = [
         requiredUpgrade: 'Buildings',
         requiredAmount: 15,
         owned: 0,
+        displayed: false,
     }
 ];
 
@@ -250,27 +286,24 @@ upgrades = [
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
  */
 function renderUpgrades() {
-    upgradeList.innerHTML = '';
-
     upgrades.forEach((upgrade) => {
-        let isAvailable = true;
+        const hasPrerequisites = 
+        (!upgrade.requiredUpgrade || (upgrades.find(u => u.name === upgrade.requiredUpgrade)?.owned || 0 ) >= (upgrade.requiredAmount || 0)) &&
+        (!upgrade.requiredAchievement || achievements.find(a => a.description === upgrade.requiredAchievement)?.acquired);
 
-        if (upgrade.requiredUpgrade) {
-            const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
-            if (!requiredUpgrade || requiredUpgrade.owned < upgrade.requiredAmount) {
-                isAvailable = false;
-            }
-        }
-        if (upgrade.requiredAchievement) {
-            const requiredAchievement = achievements.find(a => a.description === upgrade.requiredAchievement);
-            if (!requiredAchievement || requiredAchievement.owned < upgrade.requiredAmount) {
-                isAvailable = false;
-            }
-        }
-        if (isAvailable || upgrade.owned > 0) {
+        if (hasPrerequisites && !upgrade.displayed) {
             upgradeList.appendChild(createCard(upgrade));
+            upgrade.displayed = true;
+        } else if (!hasPrerequisites && upgrade.displayed) {
+            upgrade.displayed = false;
         }
     })
+}
+
+function resetDisplayedUpgrades() {
+    upgrades.forEach(upgrade => {
+        upgrade.displayed = false;
+    });
 }
 
 function createCard(upgrade) {
@@ -291,7 +324,7 @@ function createCard(upgrade) {
     ownedDisplay.textContent = `You own: ${upgrade.owned}`;
 
     card.addEventListener('click', (e) => {
-        if (isAvailable) { 
+        
             if (money >= upgrade.cost) {
                 if (upgrade.requiredUpgrade) {
                     const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
@@ -302,7 +335,7 @@ function createCard(upgrade) {
                     }
                 }
                 if (upgrade.requiredAchievement) {
-                    const requiredAchievement = achievements.find(a => a.name === upgrade.requiredAchievement);
+                    const requiredAchievement = achievements.find(a => a.description === upgrade.requiredAchievement);
                     if (!requiredAchievement || !requiredAchievement.acquired) {
                         message(`You have to unlock: ${upgrade.requiredAchievement}.`, 'warning');
                         return;
@@ -332,7 +365,7 @@ function createCard(upgrade) {
             } else {
                 message('Too poor.', 'warning');
             }
-        }
+        
     });
 
     card.appendChild(header);
@@ -343,9 +376,6 @@ function createCard(upgrade) {
 
 window.addEventListener('load', (event) => {
     renderUpgrades();
-    upgrades.forEach((upgrade) => {
-        upgradeList.appendChild(createCard(upgrade));
-    });
     window.requestAnimationFrame(step);
 });
 /* Message visar hur vi kan skapa ett html element och ta bort det.
@@ -360,9 +390,7 @@ function message(text, type) {
     p.classList.add(type);
     p.textContent = text;
     msgbox.appendChild(p);
-    if (type === 'achievement') {
-        audioAchievement.play();
-    }
+    
     setTimeout(() => {
         p.parentNode.removeChild(p);
     }, 2000);

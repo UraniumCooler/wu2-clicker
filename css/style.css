@@ -83,7 +83,6 @@ audio {
     margin-inline: auto;
     padding-left: .5vw;
     float: right;
-    background: url('../img/sealOfMississippi\ -\ creazilla.png');
     background-repeat: no-repeat;
     background-size: contain;
     background-position-y: 3.5rem;
@@ -161,17 +160,21 @@ audio {
 
 /* för spelelementet används #id som selektor för att skapa css reglerna */
 #game-button {
-    width: 30vw;
-    height: 99vh;
+    display: grid;
+    width: stretch;
+    aspect-ratio: 2 / 2;
+    height: 80vh;
+    object-fit: cover;
     font-size: var(--step-2);
-    background: url('../img/mapOfMississippi\ -\ wikimediaCommons.png');
+    background-color: transparent;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
     border: none;
-    margin-left: 12vw;
-    margin-top: -1rem;
     cursor: pointer;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #game-button:hover {
