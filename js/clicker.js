@@ -34,19 +34,6 @@ let active = false; // exempel för att visa att du kan lägga till klass för a
 // av achievements.
 // requiredSOMETHING är vad som krävs för att få dem
 
-function saveGameState() {
-    const gameState = {
-        money,
-        moneyPerClick,
-        moneyPerSecond,
-        acquiredUpgrades,
-        achievements: achievements.map(a => a.acquired),
-        upgrades: upgrades.map(u => u.owned),
-        selectedState
-    };
-    localStorage.setItem('gameState', JSON.stringify(gameState));
-}
-
 function loadGameState() {
     const savedState = localStorage.getItem('gameState');
     if (savedState) {
@@ -223,7 +210,7 @@ upgrades = [
         requiredClicks: 20,
         owned: 0,
         displayed: false,
-        costChange: (currentCost) => Math.round(currentCost * 1.1)
+        costChange: (currentCost) => Math.round(currentCost * 1.13)
     },
     {
         name: 'Increased Tax',
@@ -241,7 +228,7 @@ upgrades = [
         clicks: 0.5,
         owned: 0,
         displayed: false,
-        costChange: (currentCost) => Math.round(currentCost * 1.1)
+        costChange: (currentCost) => Math.round(currentCost * 1.13)
     },
     {
         name: 'Major Roads',
@@ -275,7 +262,7 @@ upgrades = [
         requiredAchievement: 'Your first civilians start to live here now',
         owned: 0,
         displayed: false,
-        costChange: (currentCost) => Math.round(currentCost * 1.1)
+        costChange: (currentCost) => Math.round(currentCost * 1.18)
     },
     {
         name: 'Buildings',
@@ -377,21 +364,7 @@ function createCard(upgrade) {
     card.addEventListener('click', (e) => {
         
             if (money >= upgrade.cost) {
-                if (upgrade.requiredUpgrade) {
-                    const requiredUpgrade = upgrades.find(u => u.name === upgrade.requiredUpgrade);
-                    console.log(`Checking ${upgrade.requiredUpgrade}: owned = ${requiredUpgrade.owned}, required = ${upgrade.requiredAmount}`);
-                    if (!requiredUpgrade || requiredUpgrade.owned < upgrade.requiredAmount) {
-                        message(`You need to have ${upgrade.requiredAmount} of ${upgrade.requiredUpgrade} firstly.`, 'warning');
-                        return;
-                    }
-                }
-                if (upgrade.requiredAchievement) {
-                    const requiredAchievement = achievements.find(a => a.description === upgrade.requiredAchievement);
-                    if (!requiredAchievement || !requiredAchievement.acquired) {
-                        message(`You have to unlock: ${upgrade.requiredAchievement}.`, 'warning');
-                        return;
-                    }
-                }
+                
                 if (upgrade.effect === 'doubleMoney') {
                     money *= 2;
                     message ('The Bank doubled your money', 'success');
@@ -446,4 +419,16 @@ function message(text, type) {
     setTimeout(() => {
         p.parentNode.removeChild(p);
     }, 2000);
+}
+
+function saveGameState() {
+    const gameState = {
+        money,
+        moneyPerClick,
+        moneyPerSecond,
+        acquiredUpgrades,
+        achievements: achievements.map(a => a.acquired),
+        upgrades: upgrades.map(u => u.owned),
+    };
+    localStorage.setItem('gameState', JSON.stringify(gameState));
 }
