@@ -12,6 +12,8 @@ const moneyTracker = document.querySelector('#money');
 const mpsTracker = document.querySelector('#mps'); // money per second
 const mpcTracker = document.querySelector('#mpc'); // money per click
 const upgradesTracker = document.querySelector('#upgrades');
+const plotsTracker = document.querySelector('#plots');
+const buildingsTracker = document.querySelector('#buildings');
 const upgradeList = document.querySelector('#upgradelist');
 const msgbox = document.querySelector('#msgbox');
 
@@ -29,6 +31,9 @@ let acquiredUpgrades = 0;
 let last = 0;
 let numberOfClicks = 0; // hur många gånger har spelare eg. klickat
 let active = false; // exempel för att visa att du kan lägga till klass för att indikera att spelare får valuta
+let selectedState = '';
+let availablePlots = 0;
+let availableBuildings = 0;
 
 // likt upgrades skapas här en array med objekt som innehåller olika former
 // av achievements.
@@ -58,6 +63,21 @@ function loadGameState() {
         selectedState = gameState.selectedState || '';
     }
 }
+
+function updateStateImages() {
+    const sealImagePath = `./img/Seal_of_${selectedState}.png`;
+    const container = document.querySelector('.upgcontainer');
+    if (container) {
+        container.style.backgroundImage = `url('${sealImagePath}')`;
+    }
+
+    const mapImagePath = `./img/Map_of_${selectedState}.png`;
+    const gameButton = document.getElementById('game-button');
+    if (gameButton) {
+        gameButton.style.backgroundImage = `url('${mapImagePath}')`;
+    }
+}
+
 
 let achievements = [
     {
@@ -110,10 +130,13 @@ clickerButton.addEventListener(
  * Sist i funktionen så kallar den på sig själv igen för att fortsätta uppdatera.
  */
 function step(timestamp) {
-    moneyTracker.textContent = Math.round(money);
+    moneyTracker.textContent = money.toFixed(1);
     mpsTracker.textContent = moneyPerSecond;
     mpcTracker.textContent = moneyPerClick;
     upgradesTracker.textContent = acquiredUpgrades;
+    plotsTracker.textContent = availablePlots;
+    buildingsTracker.textContent = availableBuildings;
+
 
     if (timestamp >= last + 1000) {
         money += moneyPerSecond;
@@ -167,21 +190,29 @@ const states = [
 ];
   
 window.addEventListener('DOMContentLoaded', () => {
-    const randomIndex = Math.floor(Math.random() * states.length);
-    const selectedState = states[randomIndex];
+    const savedState = localStorage.getItem('gameState');
+    let stateLoadedFromStorage = false;
 
-    const sealImagePath = `./img/Seal_of_${selectedState}.png`;
-    const container = document.querySelector('.upgcontainer');
-    if (container) {
-        container.style.backgroundImage = `url('${sealImagePath}')`;
+    if (savedState) {
+        const gameState = JSON.parse(savedState);
+        selectedState = gameState.selectedState || '';
+        if (selectedState) {
+            stateLoadedFromStorage = true;
+        }
     }
 
-    const mapImagePath = `./img/Map_of_${selectedState}.png`;
-    const gameButton = document.getElementById('game-button');
-    if (gameButton) {
-        gameButton.style.backgroundImage = `url('${mapImagePath}')`;
+    if (!selectedState) {
+        const randomIndex = Math.floor(Math.random() * states.length);
+        selectedState = states[randomIndex];
     }
-})
+
+    updateStateImages(selectedState);
+
+    if (!stateLoadedFromStorage) {
+        saveGameState(); 
+    }
+});
+
 
 /* Här använder vi en listener igen. Den här gången så lyssnar iv efter window
  * objeket och när det har laddat färdigt webbsidan(omvandlat html till dom)
@@ -364,7 +395,32 @@ function createCard(upgrade) {
     card.addEventListener('click', (e) => {
         
             if (money >= upgrade.cost) {
-                
+                if (upgrade.name === "Plots") {
+                    availablePlots++;
+                }
+
+                if (upgrade.name === "Buildings") {
+                    if (availablePlots <= 0) {
+                        message ('Not enough plots to build on', 'error');
+                    }
+                    availableBuildings++;
+                    availablePlots--;
+                }
+
+                if (upgrade.name === "Apartment Buildings") {
+                    if (availablePlots <= 0) {
+                        message ('Not enough buildings to convert', 'error');
+                    }
+                    availableBuildings--;
+                }
+
+                if (upgrade.name === "The Bank") {
+                    if (availablePlots <= 0) {
+                        message ('Not enough buildings to convert', 'error');
+                    }
+                    availablePlots--;
+                }
+
                 if (upgrade.effect === 'doubleMoney') {
                     money *= 2;
                     message ('The Bank doubled your money', 'success');
@@ -400,6 +456,7 @@ function createCard(upgrade) {
 }
 
 window.addEventListener('load', (event) => {
+    loadGameState();
     renderUpgrades();
     window.requestAnimationFrame(step);
 });
@@ -427,8 +484,11 @@ function saveGameState() {
         moneyPerClick,
         moneyPerSecond,
         acquiredUpgrades,
+        availablePlots,
+        availableBuildings,
         achievements: achievements.map(a => a.acquired),
         upgrades: upgrades.map(u => u.owned),
+        selectedState,
     };
     localStorage.setItem('gameState', JSON.stringify(gameState));
 }
